@@ -1,0 +1,179 @@
+// prisma/schema.prisma — Prisma 7 compatible
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/main/generated/prisma"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─────────────────────────────────────────────
+// INSTRUCTORS
+// ─────────────────────────────────────────────
+model Instructor {
+  id           Int         @id @default(autoincrement())
+  name         String
+  phone        String?
+  email        String?     @unique
+  earningType  EarningType @default(REVENUE_SHARE)
+  fixedSalary  Float?
+  revenueShare Float? // 0.0–1.0  e.g. 0.7 = 70 %
+
+  groups             Group[]
+  privateSessions    PrivateSession[]
+  instructorEarnings InstructorEarning[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum EarningType {
+  FIXED
+  REVENUE_SHARE
+}
+
+// ─────────────────────────────────────────────
+// STUDENTS
+// ─────────────────────────────────────────────
+model Student {
+  id    Int     @id @default(autoincrement())
+  name  String
+  title String?
+  phone String?
+
+  enrollments            Enrollment[]
+  privateSessionBookings PrivateSessionBooking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// GROUPS
+// ─────────────────────────────────────────────
+model Group {
+  id           Int     @id @default(autoincrement())
+  name         String
+  description  String?
+  monthlyPrice Float
+  schedule     String?
+
+  instructorId Int
+  instructor   Instructor @relation(fields: [instructorId], references: [id])
+
+  enrollments Enrollment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// ENROLLMENT
+// ─────────────────────────────────────────────
+model Enrollment {
+  id        Int       @id @default(autoincrement())
+  studentId Int
+  groupId   Int
+  isActive  Boolean   @default(true)
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+
+  student Student @relation(fields: [studentId], references: [id])
+  group   Group   @relation(fields: [groupId], references: [id])
+
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, groupId])
+}
+
+// ─────────────────────────────────────────────
+// SUBSCRIPTIONS
+// ─────────────────────────────────────────────
+model Subscription {
+  id           Int                @id @default(autoincrement())
+  enrollmentId Int
+  month        Int
+  year         Int
+  amountDue    Float
+  amountPaid   Float              @default(0)
+  status       SubscriptionStatus @default(PENDING)
+  paidAt       DateTime?
+  notes        String?
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([enrollmentId, month, year])
+}
+
+enum SubscriptionStatus {
+  PENDING
+  PAID
+  PARTIAL
+  OVERDUE
+}
+
+// ─────────────────────────────────────────────
+// PRIVATE SESSIONS
+// ─────────────────────────────────────────────
+model PrivateSession {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String?
+  sessionDate   DateTime
+  durationHours Float    @default(1)
+  price         Float
+
+  instructorId Int
+  instructor   Instructor @relation(fields: [instructorId], references: [id])
+
+  bookings PrivateSessionBooking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PrivateSessionBooking {
+  id               Int       @id @default(autoincrement())
+  privateSessionId Int
+  studentId        Int
+  paid             Boolean   @default(false)
+  paidAt           DateTime?
+  amountPaid       Float?
+
+  privateSession PrivateSession @relation(fields: [privateSessionId], references: [id])
+  student        Student        @relation(fields: [studentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([privateSessionId, studentId])
+}
+
+// ─────────────────────────────────────────────
+// INSTRUCTOR EARNINGS
+// ─────────────────────────────────────────────
+model InstructorEarning {
+  id            Int     @id @default(autoincrement())
+  instructorId  Int
+  month         Int
+  year          Int
+  totalRevenue  Float
+  earningAmount Float
+  notes         String?
+
+  instructor Instructor @relation(fields: [instructorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([instructorId, month, year])
+}

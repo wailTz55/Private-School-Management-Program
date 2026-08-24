@@ -1,0 +1,80 @@
+appId: com.edualgeria.educenter
+productName: EduCenter
+copyright: Copyright © 2024 EduAlgeria
+
+directories:
+  buildResources: build
+  output: dist
+
+asar: true
+
+files:
+  - out/**/*
+  - prisma/schema.prisma
+  - prisma/migrations/**/*
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!dev.db'
+  - '!scripts/**/*'
+  - '!prisma/seed.js'
+
+# Unpack native binaries from ASAR — they cannot run inside an archive
+asarUnpack:
+  - resources/**
+  - node_modules/better-sqlite3/**/*
+  - node_modules/.prisma/**/*
+  - node_modules/@prisma/client/query_engine*
+
+win:
+  executableName: EduCenter
+  icon: build/icon.ico
+  signAndEditExecutable: false
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  artifactName: EduCenter-${version}-Setup.${ext}
+  shortcutName: EduCenter
+  uninstallDisplayName: EduCenter
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  # Allow user to choose installation directory
+  allowToChangeInstallationDirectory: true
+  oneClick: false
+  perMachine: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+
+mac:
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSCameraUsageDescription: Application requests access to the device's camera.
+    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  notarize: false
+
+dmg:
+  artifactName: ${name}-${version}.${ext}
+
+linux:
+  target:
+    - AppImage
+    - deb
+  maintainer: edualgeria
+  category: Education
+
+appImage:
+  artifactName: ${name}-${version}.${ext}
+
+npmRebuild: false
+
+publish:
+  provider: generic
+  url: https://example.com/auto-updates

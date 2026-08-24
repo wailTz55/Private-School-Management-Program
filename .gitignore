@@ -1,0 +1,10 @@
+node_modules
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+
+/src/generated/prisma
+scripts/private.key
+scripts/public.key
